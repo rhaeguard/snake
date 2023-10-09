@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"math"
 	"math/rand"
@@ -30,8 +29,9 @@ type Snake struct {
 }
 
 type Food struct {
-	x, y     int32
-	rotation float32
+	x, y           int32
+	rotation       float32
+	lastUpdateTime float64
 }
 
 var snake = Snake{
@@ -44,13 +44,10 @@ var snake = Snake{
 		{10, 11},
 	},
 	direction: Up,
-	stopped:   false,
+	stopped:   true,
 }
 
-var food = &Food{
-	x: 5,
-	y: 5,
-}
+var food *Food = nil
 
 var border = rl.NewRectangle(2*step, 2*step, width-4*step, height-6*step)
 var borderThickness = float32(step) / 3
@@ -62,18 +59,18 @@ func randUInt32Between(min, max uint32) int32 {
 }
 
 func main() {
-	rl.InitWindow(width, height, "nokia snake")
+	rl.InitWindow(width, height, "retro snake")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
 	drawGrid := func() {
-		for x := 0; x <= width; x += step {
-			rl.DrawLine(int32(x), 0, int32(x), height, rl.DarkGreen)
-		}
-
-		for y := 0; y <= height; y += step {
-			rl.DrawLine(0, int32(y), width, int32(y), rl.DarkGreen)
-		}
+		//for x := 0; x <= width; x += step {
+		//	rl.DrawLine(int32(x), 0, int32(x), height, rl.DarkGreen)
+		//}
+		//
+		//for y := 0; y <= height; y += step {
+		//	rl.DrawLine(0, int32(y), width, int32(y), rl.DarkGreen)
+		//}
 
 		// top
 		rl.DrawRectangleV(rl.NewVector2(border.X, border.Y-borderThickness), rl.NewVector2(border.Width, borderThickness), rl.Black)
@@ -193,18 +190,24 @@ func main() {
 	}
 
 	addFood := func() {
-		if food == nil {
-			x := randUInt32Between(uint32(border.X/step), uint32((border.X+border.Width)/step))
-			y := randUInt32Between(uint32(border.Y/step), uint32((border.Y+border.Height)/step))
-			food = &Food{
-				x:        x,
-				y:        y,
-				rotation: 720,
-			}
+		easeOut := func(t float64) float64 {
+			return 1 - math.Pow(1-t, 3)
+		}
 
-			fmt.Printf("%+v\n", food)
+		if food == nil {
+			x := randUInt32Between(uint32(border.X/step), uint32((border.X+border.Width)/step)-1)
+			y := randUInt32Between(uint32(border.Y/step), uint32((border.Y+border.Height)/step)-1)
+			food = &Food{
+				x:              x,
+				y:              y,
+				rotation:       720,
+				lastUpdateTime: rl.GetTime(),
+			}
 		} else {
-			food.rotation -= 10
+			t := rl.GetTime()
+			progress := math.Min(1, (t-food.lastUpdateTime)/4)
+			angle := 720 - 720*easeOut(progress)
+			food.rotation = float32(angle)
 		}
 	}
 
