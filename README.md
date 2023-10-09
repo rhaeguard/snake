@@ -8,6 +8,10 @@ gameplay so far
 
 ## todo
 
+- [x] basic movement mechanics
+- [x] eating food grows the snake
+- [x] hitting border kills
+- [x] eating self kills
 - [ ] more food at the same time
 - [ ] intro menu
   - [ ] current high score
@@ -16,3 +20,7 @@ gameplay so far
 - [ ] different types of items
   - [ ] poison
 - [ ] better snake animation
+
+Reference image used so far (credit: https://metro.co.uk):
+
+![](https://metro.co.uk/wp-content/uploads/2015/05/snake_mobile.gif)
