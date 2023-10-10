@@ -15,17 +15,22 @@ gameplay so far
 - [ ] more food at the same time
 - [ ] display:
   - [ ] difficulty
-  - [ ] score
-  - [ ] name of the game
+  - [x] score
+  - [x] max score
+  - [x] game title
 - [ ] intro menu
   - [ ] current high score
   - [ ] difficulty (slug, worm, python)
   - [ ] game logo?
 - [ ] different types of items
   - [ ] poison
-- [ ] better snake animation
+- [ ] better snake animation?
 - [ ] music?
 
 Reference image used so far (credit: https://metro.co.uk):
 
 ![](https://metro.co.uk/wp-content/uploads/2015/05/snake_mobile.gif)
+
+## Font
+
+I am using the Minecraft font which is 100% free, you can find the Minecraft font here: https://www.dafont.com/minecraft.font

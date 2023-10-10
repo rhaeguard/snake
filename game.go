@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"math"
 	"math/rand"
@@ -14,6 +15,17 @@ const width = 1000
 const height = 600
 const step = 20
 
+// food rotation animation related
+const rotationMax = 720
+const totalRotateAnimationTime = 6
+
+// game related
+const maxPoints = 20
+
+// text related
+const fontSize = 50
+const textSpacing = 1.2
+
 const (
 	Up    int8 = -1
 	Down       = 1
@@ -25,32 +37,52 @@ type Snake struct {
 	pieces         [][]int32
 	direction      int8
 	lastUpdateTime float64
-	stopped        bool
-}
-
-type Food struct {
-	x, y           int32
-	rotation       float32
-	lastUpdateTime float64
+	score          uint32
+	// game status
+	started  bool
+	paused   bool
+	gameOver bool
 }
 
 var snake = Snake{
 	pieces: [][]int32{
 		{10, 6},
-		{10, 7},
-		{10, 8},
-		{10, 9},
-		{10, 10},
-		{10, 11},
 	},
-	direction: Up,
-	stopped:   true,
+	direction: Right,
+	score:     0,
+	paused:    true,
+	started:   false,
+	gameOver:  false,
+}
+
+type Food struct {
+	x, y           int32
+	rotation       float64
+	lastUpdateTime float64
 }
 
 var food *Food = nil
 
 var border = rl.NewRectangle(2*step, 2*step, width-4*step, height-6*step)
 var borderThickness = float32(step) / 3
+
+type BorderDetails struct {
+	top, bottom, left, right, horizontalThickness, verticalThickness rl.Vector2
+}
+
+var bd = BorderDetails{
+	top:                 rl.NewVector2(border.X, border.Y-borderThickness),
+	bottom:              rl.NewVector2(border.X, border.Y+border.Height),
+	left:                rl.NewVector2(border.X-borderThickness, border.Y-borderThickness),
+	right:               rl.NewVector2(border.X+border.Width, border.Y-borderThickness),
+	horizontalThickness: rl.NewVector2(border.Width, borderThickness),
+	verticalThickness:   rl.NewVector2(borderThickness, border.Height+borderThickness*2),
+}
+
+var foodRandXMin = uint32(border.X / step)
+var foodRandXMax = uint32((border.X+border.Width)/step) - 1
+var foodRandYMin = uint32(border.Y / step)
+var foodRandYMax = uint32((border.Y+border.Height)/step) - 1
 
 func randUInt32Between(min, max uint32) int32 {
 	diff := max - min + 1
@@ -60,26 +92,20 @@ func randUInt32Between(min, max uint32) int32 {
 
 func main() {
 	rl.InitWindow(width, height, "retro snake")
+	//rl.SetWindowState(rl.FlagWindowUndecorated)
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
-	drawGrid := func() {
-		//for x := 0; x <= width; x += step {
-		//	rl.DrawLine(int32(x), 0, int32(x), height, rl.DarkGreen)
-		//}
-		//
-		//for y := 0; y <= height; y += step {
-		//	rl.DrawLine(0, int32(y), width, int32(y), rl.DarkGreen)
-		//}
+	font := rl.LoadFont("assets/Minecraft.ttf")
+	defer rl.UnloadFont(font)
 
-		// top
-		rl.DrawRectangleV(rl.NewVector2(border.X, border.Y-borderThickness), rl.NewVector2(border.Width, borderThickness), rl.Black)
-		// bottom
-		rl.DrawRectangleV(rl.NewVector2(border.X, border.Y+border.Height), rl.NewVector2(border.Width, borderThickness), rl.Black)
-		// left
-		rl.DrawRectangleV(rl.NewVector2(border.X-borderThickness, border.Y-borderThickness), rl.NewVector2(borderThickness, border.Height+borderThickness*2), rl.Black)
-		// right
-		rl.DrawRectangleV(rl.NewVector2(border.X+border.Width, border.Y-borderThickness), rl.NewVector2(borderThickness, border.Height+borderThickness*2), rl.Black)
+	var maxScore = 0
+
+	drawGrid := func() {
+		rl.DrawRectangleV(bd.top, bd.horizontalThickness, snakeColor)
+		rl.DrawRectangleV(bd.bottom, bd.horizontalThickness, snakeColor)
+		rl.DrawRectangleV(bd.left, bd.verticalThickness, snakeColor)
+		rl.DrawRectangleV(bd.right, bd.verticalThickness, snakeColor)
 	}
 
 	drawSnake := func() {
@@ -121,9 +147,9 @@ func main() {
 		return false
 	}
 
-	outOfBounds := func(sentinel []int32) bool {
-		x := float32(sentinel[0] * step)
-		y := float32(sentinel[1] * step)
+	outOfBounds := func(head []int32) bool {
+		x := float32(head[0] * step)
+		y := float32(head[1] * step)
 
 		rHead := rl.NewRectangle(x, y, step, step)
 
@@ -142,7 +168,7 @@ func main() {
 		newHeadPosition := nextHeadPosition(x, y)
 
 		if outOfBounds(newHeadPosition) || eatsItself(newHeadPosition) {
-			snake.stopped = true
+			snake.gameOver = true
 			return
 		}
 
@@ -151,6 +177,10 @@ func main() {
 			if !extendSnake {
 				snake.pieces = snake.pieces[:len(snake.pieces)-1]
 			} else {
+				pct := food.rotation / rotationMax
+				score := maxPoints * pct
+				snake.score += uint32(math.Max(1, score))
+				maxScore = int(uint32(math.Max(float64(maxScore), float64(snake.score))))
 				food = nil
 			}
 		}
@@ -159,7 +189,7 @@ func main() {
 		snake.lastUpdateTime = rl.GetTime()
 	}
 
-	grabKeyPresses := func() int8 {
+	grabKeyPresses := func() {
 		direction := snake.direction
 		if rl.IsKeyPressed(rl.KeyLeft) {
 			direction = Left
@@ -178,49 +208,80 @@ func main() {
 		}
 
 		if rl.IsKeyPressed(rl.KeySpace) {
-			snake.stopped = !snake.stopped
+			if snake.gameOver {
+				snake = Snake{
+					pieces: [][]int32{
+						{10, 6},
+					},
+					direction: Right,
+					score:     0,
+					paused:    false,
+					started:   true,
+					gameOver:  false,
+				}
+				food = nil
+			} else {
+				snake.paused = !snake.paused
+				snake.started = true
+			}
 		}
 
+		// don't allow moving in the opposite direction
 		if direction*-1 != snake.direction {
 			snake.direction = direction
-			return direction
 		}
-
-		return 0
 	}
 
 	addFood := func() {
+		generateNewFood := func() (int32, int32) {
+		Selector:
+			for {
+				x := randUInt32Between(foodRandXMin, foodRandXMax)
+				y := randUInt32Between(foodRandYMin, foodRandYMax)
+
+				for _, piece := range snake.pieces {
+					if piece[0] == x && piece[1] == y {
+						continue Selector
+					}
+				}
+
+				return x, y
+			}
+		}
+
 		easeOut := func(t float64) float64 {
 			return 1 - math.Pow(1-t, 3)
 		}
 
 		if food == nil {
-			x := randUInt32Between(uint32(border.X/step), uint32((border.X+border.Width)/step)-1)
-			y := randUInt32Between(uint32(border.Y/step), uint32((border.Y+border.Height)/step)-1)
+			x, y := generateNewFood()
 			food = &Food{
 				x:              x,
 				y:              y,
-				rotation:       720,
+				rotation:       rotationMax,
 				lastUpdateTime: rl.GetTime(),
 			}
 		} else {
-			t := rl.GetTime()
-			progress := math.Min(1, (t-food.lastUpdateTime)/4)
-			angle := 720 - 720*easeOut(progress)
-			food.rotation = float32(angle)
+			progress := math.Min(1, (rl.GetTime()-food.lastUpdateTime)/totalRotateAnimationTime)
+			food.rotation = rotationMax * (1 - easeOut(progress))
 		}
+	}
+
+	// rotates the point p around point o by theta radians
+	rotatePtn := func(theta float64, p, o rl.Vector2) rl.Vector2 {
+		cos := float32(math.Cos(theta))
+		sin := float32(math.Sin(theta))
+		dx := p.X - o.X
+		dy := p.Y - o.Y
+		px := cos*dx - sin*dy + o.X
+		py := sin*dx + cos*dy + o.Y
+		return rl.NewVector2(px, py)
 	}
 
 	// basically rotates 4 points of the rectangle around origin
 	// then draws two right-angle triangles
 	drawRotatedRect := func(p rl.Rectangle, o rl.Vector2, color rl.Color) {
-		rotatePtn := func(theta float64, p, o rl.Vector2) rl.Vector2 {
-			px := math.Cos(theta)*float64(p.X-o.X) - math.Sin(theta)*float64(p.Y-o.Y) + float64(o.X)
-			py := math.Sin(theta)*float64(p.X-o.X) + math.Cos(theta)*float64(p.Y-o.Y) + float64(o.Y)
-			return rl.NewVector2(float32(px), float32(py))
-		}
-
-		theta := float64(food.rotation * (math.Pi / 180))
+		theta := food.rotation * rl.Deg2rad
 
 		ptl := rl.NewVector2(p.X, p.Y)
 		ptr := rl.NewVector2(p.X+p.Width, p.Y)
@@ -238,36 +299,84 @@ func main() {
 
 	drawFood := func() {
 		if food != nil {
+			// location of the food cell
 			x := float32(food.x * step)
 			y := float32(food.y * step)
 
 			// drawing plus symbol
+			// width
 			w := float32(step) / 3
+			// height
 			h := float32(step)
+			// center
 			o := rl.NewVector2(x+w/2+w, y+h/2)
 
+			// vertical and horizontal rectangles that make up the + symbol
 			vertical := rl.NewRectangle(x+w, y, w, h)
 			horizontal := rl.NewRectangle(x, y+w, h, w)
 
 			drawRotatedRect(vertical, o, foodColor)
 			drawRotatedRect(horizontal, o, foodColor)
-			rl.DrawCircleV(o, w/2, bgColor)
+			rl.DrawCircleV(o, w/2, bgColor) // it's in bgColor to imitate hollowness
 		}
+	}
+
+	drawHud := func() {
+		text := fmt.Sprintf("SCORE : %d", snake.score)
+		position := rl.NewVector2(border.X, border.Y+border.Height+20)
+		rl.DrawTextEx(font, text, position, fontSize, textSpacing, snakeColor)
+
+		text = fmt.Sprintf("MAX : %d", maxScore)
+		size := rl.MeasureTextEx(font, text, fontSize, textSpacing)
+		position = rl.NewVector2(border.X+border.Width-size.X, border.Y+border.Height+20)
+		rl.DrawTextEx(font, text, position, fontSize, textSpacing, snakeColor)
+	}
+
+	drawCenteredText := func(text ...string) {
+		fullTextHeight := float32(len(text) * fontSize)
+
+		for i, t := range text {
+			size := rl.MeasureTextEx(font, t, fontSize, textSpacing)
+			xx := (width - size.X) / 2
+			yy := (height-fullTextHeight)/2 + float32(i*fontSize)
+
+			position := rl.NewVector2(xx, yy)
+			rl.DrawTextEx(font, t, position, fontSize, textSpacing, snakeColor)
+		}
+	}
+
+	drawGameTitle := func(t string) {
+		size := rl.MeasureTextEx(font, t, 100, textSpacing)
+		xx := (width - size.X) / 2
+		yy := height * 0.2
+
+		position := rl.NewVector2(xx, float32(yy))
+		rl.DrawTextEx(font, t, position, 100, textSpacing, snakeColor)
 	}
 
 	for !rl.WindowShouldClose() {
 		grabKeyPresses()
 		addFood()
-		if !snake.stopped {
+		if !snake.paused {
 			updateSnake()
 		}
 
 		rl.BeginDrawing()
 		rl.ClearBackground(bgColor)
-		// draw
 		drawGrid()
-		drawSnake()
-		drawFood()
+		// draw
+		if snake.started && !snake.gameOver {
+			drawSnake()
+			drawFood()
+			drawHud()
+		} else if snake.gameOver {
+			drawCenteredText("GAME OVER", "PRESS SPACE TO RESTART")
+		} else {
+			drawGameTitle(".....SNAKE.....")
+			drawCenteredText("PRESS SPACE TO START", "ESC to EXIT")
+		}
+
 		rl.EndDrawing()
 	}
+
 }
