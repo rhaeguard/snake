@@ -33,6 +33,13 @@ const (
 	Right      = 2
 )
 
+var levels = []string{"SLUG", "WORM", "PYTHON"}
+var levelSpeed = map[string]float64{
+	"SLUG":   0.125,
+	"WORM":   0.09,
+	"PYTHON": 0.0625,
+}
+
 type Snake struct {
 	pieces         [][]int32
 	direction      int8
@@ -42,6 +49,7 @@ type Snake struct {
 	started  bool
 	paused   bool
 	gameOver bool
+	level    string
 }
 
 var snake = Snake{
@@ -53,6 +61,7 @@ var snake = Snake{
 	paused:    true,
 	started:   false,
 	gameOver:  false,
+	level:     "SLUG",
 }
 
 type Food struct {
@@ -92,7 +101,6 @@ func randUInt32Between(min, max uint32) int32 {
 
 func main() {
 	rl.InitWindow(width, height, "retro snake")
-	//rl.SetWindowState(rl.FlagWindowUndecorated)
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
@@ -157,7 +165,7 @@ func main() {
 	}
 
 	updateSnake := func() {
-		if rl.GetTime()-snake.lastUpdateTime < 0.125 {
+		if rl.GetTime()-snake.lastUpdateTime < levelSpeed[snake.level] {
 			return
 		}
 
@@ -190,24 +198,31 @@ func main() {
 	}
 
 	grabKeyPresses := func() {
-		direction := snake.direction
-		if rl.IsKeyPressed(rl.KeyLeft) {
-			direction = Left
+		if snake.started {
+			direction := snake.direction
+			if rl.IsKeyPressed(rl.KeyLeft) {
+				direction = Left
+			}
+
+			if rl.IsKeyPressed(rl.KeyRight) {
+				direction = Right
+			}
+
+			if rl.IsKeyPressed(rl.KeyUp) {
+				direction = Up
+			}
+
+			if rl.IsKeyPressed(rl.KeyDown) {
+				direction = Down
+			}
+
+			// don't allow moving in the opposite direction
+			if direction*-1 != snake.direction {
+				snake.direction = direction
+			}
 		}
 
-		if rl.IsKeyPressed(rl.KeyRight) {
-			direction = Right
-		}
-
-		if rl.IsKeyPressed(rl.KeyUp) {
-			direction = Up
-		}
-
-		if rl.IsKeyPressed(rl.KeyDown) {
-			direction = Down
-		}
-
-		if rl.IsKeyPressed(rl.KeySpace) {
+		if rl.IsKeyPressed(rl.KeyEnter) {
 			if snake.gameOver {
 				snake = Snake{
 					pieces: [][]int32{
@@ -218,6 +233,7 @@ func main() {
 					paused:    false,
 					started:   true,
 					gameOver:  false,
+					level:     snake.level,
 				}
 				food = nil
 			} else {
@@ -226,10 +242,50 @@ func main() {
 			}
 		}
 
-		// don't allow moving in the opposite direction
-		if direction*-1 != snake.direction {
-			snake.direction = direction
+		if snake.gameOver && rl.IsKeyPressed(rl.KeySpace) {
+			snake = Snake{
+				pieces: [][]int32{
+					{10, 6},
+				},
+				direction: Right,
+				score:     0,
+				paused:    true,
+				started:   false,
+				gameOver:  false,
+				level:     snake.level,
+			}
+			food = nil
 		}
+
+		if !snake.started {
+			var current int
+
+			for i, l := range levels {
+				if l == snake.level {
+					current = i
+					break
+				}
+			}
+
+			if rl.IsKeyPressed(rl.KeyLeft) {
+				current -= 1
+
+				if current < 0 {
+					current = len(levels) - 1
+				}
+			}
+
+			if rl.IsKeyPressed(rl.KeyRight) {
+				current += 1
+
+				if current >= len(levels) {
+					current = 0
+				}
+			}
+
+			snake.level = levels[current]
+		}
+
 	}
 
 	addFood := func() {
@@ -322,19 +378,18 @@ func main() {
 	}
 
 	drawHud := func() {
-		text := fmt.Sprintf("SCORE : %d", snake.score)
+		text := fmt.Sprintf("SCORE : %d/%d", snake.score, maxScore)
 		position := rl.NewVector2(border.X, border.Y+border.Height+20)
 		rl.DrawTextEx(font, text, position, fontSize, textSpacing, snakeColor)
 
-		text = fmt.Sprintf("MAX : %d", maxScore)
+		text = fmt.Sprintf("LVL : %s", snake.level)
 		size := rl.MeasureTextEx(font, text, fontSize, textSpacing)
 		position = rl.NewVector2(border.X+border.Width-size.X, border.Y+border.Height+20)
 		rl.DrawTextEx(font, text, position, fontSize, textSpacing, snakeColor)
 	}
 
-	drawCenteredText := func(text ...string) {
+	drawCenteredText := func(text ...string) float32 {
 		fullTextHeight := float32(len(text) * fontSize)
-
 		for i, t := range text {
 			size := rl.MeasureTextEx(font, t, fontSize, textSpacing)
 			xx := (width - size.X) / 2
@@ -342,6 +397,44 @@ func main() {
 
 			position := rl.NewVector2(xx, yy)
 			rl.DrawTextEx(font, t, position, fontSize, textSpacing, snakeColor)
+		}
+
+		return (height-fullTextHeight)/2 + float32((len(text)+1)*fontSize)
+	}
+
+	drawCenteredTextFromPosition := func(posY float32, options ...string) {
+		const y = width * 0.05
+
+		var K float32
+
+		for _, o := range options {
+			K += rl.MeasureTextEx(font, o, fontSize, textSpacing).X
+		}
+
+		var X float32
+		X = 0.5 * (width - 2*y - K)
+
+		var prefix = X
+
+		padding := func(position, size rl.Vector2) {
+			newPosition := rl.NewVector2(position.X-10, position.Y-10)
+			newSize := rl.NewVector2(size.X+10, size.Y+10)
+			rl.DrawRectangleV(newPosition, newSize, snakeColor)
+		}
+
+		for i, o := range options {
+			size := rl.MeasureTextEx(font, o, fontSize, textSpacing)
+			position := rl.NewVector2(prefix, posY)
+			if o == snake.level {
+				padding(position, size)
+				rl.DrawTextEx(font, o, position, fontSize, textSpacing, bgColor)
+			} else {
+				rl.DrawTextEx(font, o, position, fontSize, textSpacing, snakeColor)
+			}
+			prefix = prefix + size.X
+			if i != len(options)-1 {
+				prefix += y
+			}
 		}
 	}
 
@@ -370,10 +463,11 @@ func main() {
 			drawFood()
 			drawHud()
 		} else if snake.gameOver {
-			drawCenteredText("GAME OVER", "PRESS SPACE TO RESTART")
+			drawCenteredText("GAME OVER", "ENTER TO RESTART", "SPACE TO MENU")
 		} else {
 			drawGameTitle(".....SNAKE.....")
-			drawCenteredText("PRESS SPACE TO START", "ESC to EXIT")
+			py := drawCenteredText("PRESS ENTER TO START")
+			drawCenteredTextFromPosition(py, "SLUG", "WORM", "PYTHON")
 		}
 
 		rl.EndDrawing()

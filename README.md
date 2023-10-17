@@ -13,15 +13,15 @@ gameplay so far
 - [x] hitting border kills
 - [x] eating self kills
 - [ ] more food at the same time
-- [ ] display:
-  - [ ] difficulty
+- [x] display:
+  - [x] difficulty
   - [x] score
   - [x] max score
   - [x] game title
-- [ ] intro menu
-  - [ ] current high score
-  - [ ] difficulty (slug, worm, python)
-  - [ ] game logo?
+- [x] intro menu
+  - [x] current high score
+  - [x] difficulty (slug, worm, python)
+  - [x] game logo?
 - [ ] different types of items
   - [ ] poison
 - [ ] better snake animation?
