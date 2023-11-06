@@ -98,23 +98,23 @@ func getLowestEntropyCoords(weights map[uint8]uint, plane [][][]uint8) v2 {
 func collapse(coords v2, weights map[uint8]uint, plane [][][]uint8) {
 	opts := plane[coords.y][coords.x]
 
-	//totalWeight := 0.0
-	//for _, o := range opts {
-	//	totalWeight += float64(weights[o])
-	//}
-	//
-	//totalWeight = totalWeight * rand.Float64()
-	//
-	//pick := opts[0]
-	//
-	//for _, o := range opts {
-	//	totalWeight -= float64(weights[o])
-	//	if totalWeight < 0 {
-	//		pick = o
-	//		break
-	//	}
-	//}
-	pick := opts[rand.Intn(len(opts))]
+	totalWeight := 0.0
+	for _, o := range opts {
+		totalWeight += float64(weights[o])
+	}
+
+	totalWeight = totalWeight * rand.Float64()
+
+	pick := opts[0]
+
+	for _, o := range opts {
+		totalWeight -= float64(weights[o])
+		if totalWeight < 0 {
+			pick = o
+			break
+		}
+	}
+	//pick := opts[rand.Intn(len(opts))]
 	plane[coords.y][coords.x] = []uint8{pick}
 }
 
@@ -190,22 +190,3 @@ func wfcInit(w, h int) [][][]uint8 {
 	rules, weights := generateRules(inputMatrix)
 	return wfc(weights, rules, w, h)
 }
-
-//func main2() {
-//	fmt.Printf("%d\t%d\n", w, h)
-//	rules, weights := generateRules(inputMatrix)
-//	fmt.Printf("%-v\n", rules)
-//	fmt.Printf("%-v\n", weights)
-//
-//	plane := wfc(weights, rules)
-//
-//	for _, row := range plane {
-//		for _, tile := range row {
-//			if len(tile) != 1 {
-//				panic("non-single length tile!")
-//			}
-//			fmt.Printf("%c", tile[0])
-//		}
-//		fmt.Printf("\n")
-//	}
-//}

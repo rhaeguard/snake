@@ -99,6 +99,8 @@ func randUInt32Between(min, max uint32) int32 {
 	return int32(u + min)
 }
 
+var wfcPlane = wfcInit(width/step-4, height/step-6)
+
 var oceanAnimationLastUpdated = 0.0
 var oceanAnimationFlip = false
 
@@ -112,14 +114,14 @@ func main() {
 
 	var maxScore = 0
 
-	drawGrid := func(wfcPlane [][][]uint8) {
+	drawGrid := func() {
 		rl.DrawRectangleV(bd.top, bd.horizontalThickness, snakeColor)
 		rl.DrawRectangleV(bd.bottom, bd.horizontalThickness, snakeColor)
 		rl.DrawRectangleV(bd.left, bd.verticalThickness, snakeColor)
 		rl.DrawRectangleV(bd.right, bd.verticalThickness, snakeColor)
 
 		if snake.started {
-			if rl.GetTime()-oceanAnimationLastUpdated > 1 {
+			if rl.GetTime()-oceanAnimationLastUpdated > 0.6 {
 				oceanAnimationFlip = !oceanAnimationFlip
 				oceanAnimationLastUpdated = rl.GetTime()
 			}
@@ -150,8 +152,6 @@ func main() {
 						yp := float32((y + 2) * step)
 
 						if oceanAnimationFlip {
-							fmt.Printf("flip\n")
-
 							xs := []float32{
 								xp, xp + step/2, xp + step,
 							}
@@ -164,7 +164,6 @@ func main() {
 								rl.DrawLineV(rl.NewVector2(xs[i], ys[i]), rl.NewVector2(xs[i+1], ys[i+1]), rl.Black)
 							}
 						} else {
-							fmt.Printf("klop\n")
 							xs := []float32{
 								xp, xp + (step / 4), xp + 3*(step/4), xp + step,
 							}
@@ -231,6 +230,12 @@ func main() {
 		return !rl.CheckCollisionRecs(rHead, border)
 	}
 
+	drowns := func(head []int32) bool {
+		x := head[0]
+		y := head[1]
+		return wfcPlane[y-2][x-2][0] == 'S'
+	}
+
 	updateSnake := func() {
 		if rl.GetTime()-snake.lastUpdateTime < levelSpeed[snake.level] {
 			return
@@ -242,7 +247,7 @@ func main() {
 
 		newHeadPosition := nextHeadPosition(x, y)
 
-		if outOfBounds(newHeadPosition) || eatsItself(newHeadPosition) {
+		if outOfBounds(newHeadPosition) || eatsItself(newHeadPosition) || drowns(newHeadPosition) {
 			snake.gameOver = true
 			return
 		}
@@ -303,6 +308,7 @@ func main() {
 					level:     snake.level,
 				}
 				food = nil
+				wfcPlane = wfcInit(width/step-4, height/step-6)
 			} else {
 				snake.paused = !snake.paused
 				snake.started = true
@@ -361,6 +367,10 @@ func main() {
 			for {
 				x := randUInt32Between(foodRandXMin, foodRandXMax)
 				y := randUInt32Between(foodRandYMin, foodRandYMax)
+
+				if wfcPlane[y-2][x-2][0] == 'S' {
+					continue Selector
+				}
 
 				for _, piece := range snake.pieces {
 					if piece[0] == x && piece[1] == y {
@@ -514,24 +524,6 @@ func main() {
 		rl.DrawTextEx(font, t, position, 100, textSpacing, snakeColor)
 	}
 
-	wfcPlane := wfcInit(width/step-4, height/step-6)
-
-	drawWFC := func() {
-		for y, row := range wfcPlane {
-			for x, tile := range row {
-				if tile[0] == 'L' {
-					// land
-				} else if tile[0] == 'C' {
-					// coast
-					rl.DrawRectangle(int32(x*step), int32(y*step), step, step, rl.Orange)
-				} else {
-					// sea
-					rl.DrawRectangle(int32(x*step), int32(y*step), step, step, rl.SkyBlue)
-				}
-			}
-		}
-	}
-
 	for !rl.WindowShouldClose() {
 		grabKeyPresses()
 		addFood()
@@ -541,22 +533,18 @@ func main() {
 
 		rl.BeginDrawing()
 		rl.ClearBackground(bgColor)
-		if 1 > 2 {
-			drawWFC()
+		drawGrid()
+		// draw
+		if snake.started && !snake.gameOver {
+			drawSnake()
+			drawFood()
+			drawHud()
+		} else if snake.gameOver {
+			drawCenteredText("GAME OVER", "ENTER TO RESTART", "SPACE TO MENU")
 		} else {
-			drawGrid(wfcPlane)
-			// draw
-			if snake.started && !snake.gameOver {
-				drawSnake()
-				drawFood()
-				drawHud()
-			} else if snake.gameOver {
-				drawCenteredText("GAME OVER", "ENTER TO RESTART", "SPACE TO MENU")
-			} else {
-				drawGameTitle(".....SNAKE.....")
-				py := drawCenteredText("PRESS ENTER TO START")
-				drawCenteredTextFromPosition(py, "SLUG", "WORM", "PYTHON")
-			}
+			drawGameTitle(".....SNAKE.....")
+			py := drawCenteredText("PRESS ENTER TO START")
+			drawCenteredTextFromPosition(py, "SLUG", "WORM", "PYTHON")
 		}
 
 		rl.EndDrawing()
