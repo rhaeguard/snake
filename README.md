@@ -4,7 +4,9 @@ written in [raylib](https://github.com/raysan5/raylib) (using [raylib-go](https:
 
 gameplay so far 
 
-<img src="img.gif" width="500" height="300">
+<img src="gameplay.gif" width="500" height="300">
+
+- for each game, a new map is procedurally generated using [Wave Function Collapse](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/) algorithm.
 
 ## todo
 
@@ -26,6 +28,7 @@ gameplay so far
   - [ ] poison
 - [ ] better snake animation?
 - [ ] music?
+- [ ] procedurally generated map
 
 Reference image used so far (credit: https://metro.co.uk):
 
