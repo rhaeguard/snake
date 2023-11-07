@@ -28,7 +28,7 @@ gameplay so far
   - [ ] poison
 - [ ] better snake animation?
 - [ ] music?
-- [ ] procedurally generated map
+- [x] procedurally generated map
 
 Reference image used so far (credit: https://metro.co.uk):
 

@@ -254,14 +254,14 @@ func main() {
 
 		if food != nil {
 			extendSnake := x == food.x && y == food.y
-			if !extendSnake {
-				snake.pieces = snake.pieces[:len(snake.pieces)-1]
-			} else {
+			if extendSnake {
 				pct := food.rotation / rotationMax
 				score := maxPoints * pct
 				snake.score += uint32(math.Max(1, score))
 				maxScore = int(uint32(math.Max(float64(maxScore), float64(snake.score))))
 				food = nil
+			} else {
+				snake.pieces = snake.pieces[:len(snake.pieces)-1]
 			}
 		}
 
@@ -272,25 +272,27 @@ func main() {
 	grabKeyPresses := func() {
 		if snake.started {
 			direction := snake.direction
-			if rl.IsKeyPressed(rl.KeyLeft) {
+			if rl.IsKeyDown(rl.KeyLeft) {
 				direction = Left
 			}
 
-			if rl.IsKeyPressed(rl.KeyRight) {
+			if rl.IsKeyDown(rl.KeyRight) {
 				direction = Right
 			}
 
-			if rl.IsKeyPressed(rl.KeyUp) {
+			if rl.IsKeyDown(rl.KeyUp) {
 				direction = Up
 			}
 
-			if rl.IsKeyPressed(rl.KeyDown) {
+			if rl.IsKeyDown(rl.KeyDown) {
 				direction = Down
 			}
 
-			// don't allow moving in the opposite direction
-			if direction*-1 != snake.direction {
-				snake.direction = direction
+			if rl.GetTime()-snake.lastUpdateTime >= levelSpeed[snake.level] {
+				// don't allow moving in the opposite direction
+				if direction*-1 != snake.direction {
+					snake.direction = direction
+				}
 			}
 		}
 
