@@ -12,8 +12,8 @@ var bgColor = rl.NewColor(128, 160, 107, 255)
 var snakeColor = rl.NewColor(0, 50, 44, 255)
 var foodColor = rl.NewColor(0, 50, 44, 255)
 
-const width = 1000
-const height = 600
+const width = 1280
+const height = 720
 const step = 20
 
 // food rotation animation related

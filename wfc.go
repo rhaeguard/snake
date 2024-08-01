@@ -186,7 +186,28 @@ func wfc(weights map[uint8]uint, rules map[string]bool, w, h int) [][][]uint8 {
 	return plane
 }
 
+func planeHasLandPath(w, h int, plane [][][]uint8) bool {
+	for col := 0; col < w; col++ {
+		isAllSea := true
+		for row := 0; row < h; row++ {
+			tile := plane[row][col][0]
+			if tile != 'S' {
+				isAllSea = false
+			}
+		}
+
+		if isAllSea {
+			return false
+		}
+	}
+	return true
+}
+
 func wfcInit(w, h int) [][][]uint8 {
 	rules, weights := generateRules(inputMatrix)
-	return wfc(weights, rules, w, h)
+	plane := wfc(weights, rules, w, h)
+	for !planeHasLandPath(w, h, plane) {
+		plane = wfc(weights, rules, w, h)
+	}
+	return plane
 }
