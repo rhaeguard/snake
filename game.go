@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	rl "github.com/gen2brain/raylib-go/raylib"
 	"math"
 	"math/rand"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 var bgColor = rl.NewColor(128, 160, 107, 255)
@@ -28,9 +29,9 @@ const textSpacing = 1.2
 
 const (
 	Up    int8 = -1
-	Down       = 1
-	Left       = -2
-	Right      = 2
+	Down  int8 = 1
+	Left  int8 = -2
+	Right int8 = 2
 )
 
 var levels = []string{"SLUG", "WORM", "PYTHON"}
@@ -288,11 +289,9 @@ func main() {
 				direction = Down
 			}
 
-			if rl.GetTime()-snake.lastUpdateTime >= levelSpeed[snake.level] {
-				// don't allow moving in the opposite direction
-				if direction*-1 != snake.direction {
-					snake.direction = direction
-				}
+			// don't allow moving in the opposite direction
+			if direction*-1 != snake.direction {
+				snake.direction = direction
 			}
 		}
 
