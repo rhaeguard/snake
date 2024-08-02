@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"slices"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
@@ -41,6 +42,14 @@ var levelSpeed = map[string]float64{
 	"SLUG":   0.125,
 	"WORM":   0.09,
 	"PYTHON": 0.0625,
+}
+var levelSkipScore = []struct {
+	string
+	uint32
+}{
+	{"PYTHON", 100},
+	{"WORM", 50},
+	{"SLUG", 0},
 }
 
 type Snake struct {
@@ -415,6 +424,15 @@ func main() {
 				food = nil
 			} else {
 				snake.pieces = snake.pieces[:len(snake.pieces)-1]
+			}
+		}
+
+		for _, v := range levelSkipScore {
+			if maxScore > v.uint32 {
+				if slices.Index(levels, snake.level) < slices.Index(levels, v.string) {
+					snake.level = v.string
+				}
+				break
 			}
 		}
 

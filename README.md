@@ -2,9 +2,9 @@
 
 written in [raylib](https://github.com/raysan5/raylib) (using [raylib-go](https://github.com/gen2brain/raylib-go))
 
-gameplay so far 
+the gameplay
 
-<img src="gameplay.gif" width="500" height="300">
+https://github.com/user-attachments/assets/e437530c-a5b4-4204-b25a-6a67be830c45
 
 - for each game, a new map is procedurally generated using [Wave Function Collapse](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/) algorithm.
 
@@ -27,7 +27,6 @@ gameplay so far
 - [x] procedurally generated map
 - [ ] different types of items
   - [ ] poison
-- [ ] better snake animation?
 - [ ] music?
 
 Reference image used so far (credit: https://metro.co.uk):
