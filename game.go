@@ -393,6 +393,10 @@ func main() {
 			return 1 - math.Pow(1-t, 3)
 		}
 
+		if food != nil && rl.GetTime()-food.lastUpdateTime >= 10 {
+			food = nil
+		}
+
 		if food == nil {
 			x, y := generateNewFood()
 			food = &Food{

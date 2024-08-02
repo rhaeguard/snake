@@ -14,7 +14,7 @@ gameplay so far
 - [x] eating food grows the snake
 - [x] hitting border kills
 - [x] eating self kills
-- [ ] more food at the same time
+- [x] ephemeral food
 - [x] display:
   - [x] difficulty
   - [x] score
