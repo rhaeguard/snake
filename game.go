@@ -100,7 +100,7 @@ func randUInt32Between(min, max uint32) int32 {
 	return int32(u + min)
 }
 
-var wfcPlane = wfcInit(width/step-4, height/step-6)
+var wfcPlane, startingPos = wfcInit(width/step-4, height/step-6)
 
 var oceanAnimationLastUpdated = 0.0
 var oceanAnimationFlip = false
@@ -297,9 +297,10 @@ func main() {
 
 		if rl.IsKeyPressed(rl.KeyEnter) {
 			if snake.gameOver {
+				wfcPlane, startingPos = wfcInit(width/step-4, height/step-6)
 				snake = Snake{
 					pieces: [][]int32{
-						{10, 6},
+						startingPos,
 					},
 					direction: Right,
 					score:     0,
@@ -309,7 +310,6 @@ func main() {
 					level:     snake.level,
 				}
 				food = nil
-				wfcPlane = wfcInit(width/step-4, height/step-6)
 			} else {
 				snake.paused = !snake.paused
 				snake.started = true

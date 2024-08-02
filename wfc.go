@@ -203,11 +203,38 @@ func planeHasLandPath(w, h int, plane [][][]uint8) bool {
 	return true
 }
 
-func wfcInit(w, h int) [][][]uint8 {
+func findSuitableStartingPosition(w, h int, plane [][][]uint8) []int32 {
+	// find a 5x5 patch of land
+	validPatch := func(y, x int) bool {
+		for row := y; row < y+5; row++ {
+			for col := x; col < x+5; col++ {
+				if plane[row][col][0] != 'L' {
+					return false
+				}
+			}
+		}
+		return true
+	}
+	for row := 0; row < h-5; row++ {
+		for col := 0; col < w-5; col++ {
+			if validPatch(row, col) {
+				return []int32{
+					int32(row + 2),
+					int32(col + 2),
+				}
+			}
+		}
+	}
+	fmt.Print("here...\n")
+	return []int32{-1, -1}
+}
+
+func wfcInit(w, h int) ([][][]uint8, []int32) {
 	rules, weights := generateRules(inputMatrix)
 	plane := wfc(weights, rules, w, h)
 	for !planeHasLandPath(w, h, plane) {
 		plane = wfc(weights, rules, w, h)
 	}
-	return plane
+	pos := findSuitableStartingPosition(w, h, plane)
+	return plane, pos
 }
