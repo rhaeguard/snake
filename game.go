@@ -188,8 +188,32 @@ func main() {
 		}
 	}
 
+	reflectAlongAxis := func(vertices []rl.Vector2, midpoint float32, xAxis bool) []rl.Vector2 {
+		size := len(vertices)
+		newVertices := make([]rl.Vector2, size)
+		if xAxis {
+			for ix, v := range vertices {
+				diff := midpoint - v.X
+				newVertices[size-ix-1] = rl.NewVector2(
+					midpoint+diff,
+					v.Y,
+				)
+			}
+		} else {
+			for ix, v := range vertices {
+				diff := midpoint - v.Y
+				newVertices[size-ix-1] = rl.NewVector2(
+					v.X,
+					midpoint+diff,
+				)
+			}
+		}
+
+		return newVertices
+	}
+
 	drawSnake := func() {
-		for _, piece := range snake.pieces {
+		for ix, piece := range snake.pieces {
 			x := piece[0]
 			y := piece[1]
 
@@ -200,6 +224,79 @@ func main() {
 				Height: step,
 			}
 			rl.DrawRectangleRounded(r, 0.5, 100, snakeColor)
+
+			if ix == 0 {
+				/*
+					to render the head, we basically render 2 right angled triangles with the background color.
+					however, to figure out the alignment depending on the direction the snake is heading, we use reflection along an x or y coordinate.
+
+					we need 2 triangles to represent the head. in our case these are t1 and t2.
+					t1 represents a triangle that is top-left side of a left-moving snake's head.
+							to produce the full head, we only need to flip t1 across y axis around the y midpoint of the block
+					t2 represents a triangle that is top-left side of a up-moving snake's head.
+							to produce the full head, we only need to flip t2 across x axis around the x midpoint of the block
+
+					full formulas for producing 2 triangles:
+						left moving:  [t1, Y(t1)]
+						right moving: [X(t1), Y(X(t1))]
+						up moving: 	  [t2, X(t2)]
+						left moving:  [Y(t2), X(Y(t2))]
+						:::: X(t) means to rotate around x midpoint; Y(t) means to rotate around y midpoint
+
+
+					==============
+					the same idea applies to eyes as well.
+				*/
+
+				// eyes
+				eye1 := []rl.Vector2{
+					rl.NewVector2(r.X+r.Width*0.25, r.Y+r.Height*0.25),
+				}
+
+				var eye2 []rl.Vector2
+
+				// head
+				t1 := []rl.Vector2{
+					rl.NewVector2(r.X+r.Width*0.5, r.Y),
+					rl.NewVector2(r.X, r.Y),
+					rl.NewVector2(r.X, r.Y+r.Height*0.33),
+				}
+
+				t2 := []rl.Vector2{
+					rl.NewVector2(r.X, r.Y),
+					rl.NewVector2(r.X, r.Y+r.Height*0.5),
+					rl.NewVector2(r.X+r.Width*0.33, r.Y),
+				}
+
+				switch snake.direction {
+				case Down:
+					eye2 = reflectAlongAxis(eye1, r.X+r.Width*0.5, true)
+
+					t1 = reflectAlongAxis(t1, r.Y+r.Height*0.5, false)
+					t2 = reflectAlongAxis(t1, r.X+r.Width*0.5, true)
+				case Up:
+					eye1 = reflectAlongAxis(eye1, r.Y+r.Height*0.5, false)
+					eye2 = reflectAlongAxis(eye1, r.X+r.Width*0.5, true)
+
+					t2 = reflectAlongAxis(t1, r.X+r.Width*0.5, true)
+				case Right:
+					eye2 = reflectAlongAxis(eye1, r.Y+r.Height*0.5, false)
+
+					t1 = reflectAlongAxis(t1, r.X+r.Width*0.5, true)
+					t2 = reflectAlongAxis(t1, r.Y+r.Height*0.5, false)
+				case Left:
+					eye1 = reflectAlongAxis(eye1, r.X+r.Width*0.5, true)
+					eye2 = reflectAlongAxis(eye1, r.Y+r.Height*0.5, false)
+
+					t2 = reflectAlongAxis(t1, r.Y+r.Height*0.5, false)
+				}
+
+				rl.DrawCircleV(eye1[0], 2.0, bgColor)
+				rl.DrawCircleV(eye2[0], 2.0, bgColor)
+
+				rl.DrawTriangle(t1[0], t1[1], t1[2], bgColor)
+				rl.DrawTriangle(t2[0], t2[1], t2[2], bgColor)
+			}
 		}
 	}
 
