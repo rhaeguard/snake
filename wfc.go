@@ -225,7 +225,6 @@ func findSuitableStartingPosition(w, h int, plane [][][]uint8) []int32 {
 			}
 		}
 	}
-	fmt.Print("here...\n")
 	return []int32{-1, -1}
 }
 

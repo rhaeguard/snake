@@ -53,18 +53,6 @@ type Snake struct {
 	level    string
 }
 
-var snake = Snake{
-	pieces: [][]int32{
-		{10, 6},
-	},
-	direction: Right,
-	score:     0,
-	paused:    true,
-	started:   false,
-	gameOver:  false,
-	level:     "SLUG",
-}
-
 type Food struct {
 	x, y           int32
 	rotation       float64
@@ -104,6 +92,21 @@ var wfcPlane, startingPos = wfcInit(width/step-4, height/step-6)
 
 var oceanAnimationLastUpdated = 0.0
 var oceanAnimationFlip = false
+
+var snake = Snake{
+	pieces: [][]int32{
+		{
+			startingPos[1] + 2, // x pos
+			startingPos[0] + 2, // y pos
+		},
+	},
+	direction: Right,
+	score:     0,
+	paused:    true,
+	started:   false,
+	gameOver:  false,
+	level:     "SLUG",
+}
 
 func main() {
 	rl.InitWindow(width, height, "retro snake")
@@ -300,7 +303,10 @@ func main() {
 				wfcPlane, startingPos = wfcInit(width/step-4, height/step-6)
 				snake = Snake{
 					pieces: [][]int32{
-						startingPos,
+						{
+							startingPos[1] + 2, // x pos
+							startingPos[0] + 2, // y pos
+						},
 					},
 					direction: Right,
 					score:     0,
