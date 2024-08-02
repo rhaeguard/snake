@@ -223,7 +223,10 @@ func main() {
 				Width:  step,
 				Height: step,
 			}
-			rl.DrawRectangleRounded(r, 0.5, 100, snakeColor)
+
+			if !(ix > 0 && ix == len(snake.pieces)-1) {
+				rl.DrawRectangleRounded(r, 0.5, 100, snakeColor)
+			}
 
 			if ix == 0 {
 				/*
@@ -296,6 +299,51 @@ func main() {
 
 				rl.DrawTriangle(t1[0], t1[1], t1[2], bgColor)
 				rl.DrawTriangle(t2[0], t2[1], t2[2], bgColor)
+			} else if ix > 0 && ix == len(snake.pieces)-1 {
+				prev := snake.pieces[ix-1]
+				px := prev[0]
+				py := prev[1]
+				var direction int8
+
+				if px > x {
+					direction = Right
+				}
+				if px < x {
+					direction = Left
+				}
+				if py > y {
+					direction = Down
+				}
+				if py < y {
+					direction = Up
+				}
+
+				// tail
+				var center rl.Vector2
+				var startAngle float32
+				switch direction {
+				case Down, Right:
+					center = rl.NewVector2(
+						r.X+r.Width,
+						r.Y+r.Height,
+					)
+					startAngle = 180.0
+				case Up, Left:
+					center = rl.NewVector2(
+						r.X,
+						r.Y,
+					)
+					startAngle = 0.0
+				}
+
+				rl.DrawCircleSector(
+					center,
+					r.Width,
+					startAngle,
+					startAngle+90.0,
+					0,
+					snakeColor,
+				)
 			}
 		}
 	}
