@@ -23,7 +23,7 @@ const rotationMax = 720
 const totalRotateAnimationTime = 6
 
 // game related
-const maxPoints = 20
+const maxPointsForFood = 20
 
 // text related
 const fontSize = 50
@@ -118,7 +118,7 @@ func main() {
 	font := rl.LoadFont("assets/Minecraft.ttf")
 	defer rl.UnloadFont(font)
 
-	var maxScore = 0
+	var maxScore uint32 = 0
 
 	drawGrid := func() {
 		rl.DrawRectangleV(bd.top, bd.horizontalThickness, snakeColor)
@@ -407,9 +407,11 @@ func main() {
 			extendSnake := x == food.x && y == food.y
 			if extendSnake {
 				pct := food.rotation / rotationMax
-				score := maxPoints * pct
+				score := maxPointsForFood * pct
 				snake.score += uint32(math.Max(1, score))
-				maxScore = int(uint32(math.Max(float64(maxScore), float64(snake.score))))
+				if snake.score > maxScore {
+					maxScore = snake.score
+				}
 				food = nil
 			} else {
 				snake.pieces = snake.pieces[:len(snake.pieces)-1]
