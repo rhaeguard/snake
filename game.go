@@ -15,6 +15,8 @@ var foodColor = rl.NewColor(0, 50, 44, 255)
 const width = 1280
 const height = 720
 const step = 20
+const offsetX = 2
+const offsetY = 2
 
 // food rotation animation related
 const rotationMax = 720
@@ -61,7 +63,7 @@ type Food struct {
 
 var food *Food = nil
 
-var border = rl.NewRectangle(2*step, 2*step, width-4*step, height-6*step)
+var border = rl.NewRectangle(offsetX*step, offsetY*step, width-offsetX*2*step, height-offsetY*3*step)
 var borderThickness = float32(step) / 3
 
 type BorderDetails struct {
@@ -88,7 +90,7 @@ func randUInt32Between(min, max uint32) int32 {
 	return int32(u + min)
 }
 
-var wfcPlane, startingPos = wfcInit(width/step-4, height/step-6)
+var wfcPlane, startingPos = wfcInit(width/step-offsetX*2, height/step-offsetY*3)
 
 var oceanAnimationLastUpdated = 0.0
 var oceanAnimationFlip = false
@@ -96,8 +98,8 @@ var oceanAnimationFlip = false
 var snake = Snake{
 	pieces: [][]int32{
 		{
-			startingPos[1] + 2, // x pos
-			startingPos[0] + 2, // y pos
+			startingPos[1] + offsetX, // x pos
+			startingPos[0] + offsetY, // y pos
 		},
 	},
 	direction: Right,
@@ -136,8 +138,8 @@ func main() {
 						// land
 					} else if tile[0] == 'C' {
 						// coast
-						xp := float32((x + 2) * step)
-						yp := float32((y + 2) * step)
+						xp := float32((x + offsetX) * step)
+						yp := float32((y + offsetY) * step)
 
 						c := 4
 						incr := float32(step) / float32(c)
@@ -152,8 +154,8 @@ func main() {
 
 					} else {
 						// sea
-						xp := float32((x + 2) * step)
-						yp := float32((y + 2) * step)
+						xp := float32((x + offsetX) * step)
+						yp := float32((y + offsetY) * step)
 
 						if oceanAnimationFlip {
 							xs := []float32{
@@ -237,7 +239,7 @@ func main() {
 	drowns := func(head []int32) bool {
 		x := head[0]
 		y := head[1]
-		return wfcPlane[y-2][x-2][0] == 'S'
+		return wfcPlane[y-offsetY][x-offsetX][0] == 'S'
 	}
 
 	updateSnake := func() {
@@ -304,8 +306,8 @@ func main() {
 				snake = Snake{
 					pieces: [][]int32{
 						{
-							startingPos[1] + 2, // x pos
-							startingPos[0] + 2, // y pos
+							startingPos[1] + offsetX, // x pos
+							startingPos[0] + offsetY, // y pos
 						},
 					},
 					direction: Right,
@@ -375,7 +377,7 @@ func main() {
 				x := randUInt32Between(foodRandXMin, foodRandXMax)
 				y := randUInt32Between(foodRandYMin, foodRandYMax)
 
-				if wfcPlane[y-2][x-2][0] == 'S' {
+				if wfcPlane[y-offsetY][x-offsetX][0] == 'S' {
 					continue Selector
 				}
 

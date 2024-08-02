@@ -24,11 +24,11 @@ gameplay so far
   - [x] current high score
   - [x] difficulty (slug, worm, python)
   - [x] game logo?
+- [x] procedurally generated map
 - [ ] different types of items
   - [ ] poison
 - [ ] better snake animation?
 - [ ] music?
-- [x] procedurally generated map
 
 Reference image used so far (credit: https://metro.co.uk):
 
