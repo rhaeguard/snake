@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"slices"
 )
 
 var inputMatrix = [][]uint8{
@@ -229,6 +230,9 @@ func findSuitableStartingPosition(w, h int, plane [][][]uint8) []int32 {
 }
 
 func wfcInit(w, h int) ([][][]uint8, []int32) {
+	if rand.Float32() >= 0.5 {
+		slices.Reverse(inputMatrix)
+	}
 	rules, weights := generateRules(inputMatrix)
 	plane := wfc(weights, rules, w, h)
 	for !planeHasLandPath(w, h, plane) {

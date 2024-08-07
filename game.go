@@ -37,19 +37,27 @@ const (
 	Right int8 = 2
 )
 
-var levels = []string{"SLUG", "WORM", "PYTHON"}
+type Level = string
+
+const (
+	Level1 string = "SLUG"
+	Level2 string = "WORM"
+	Level3 string = "PYTHON"
+)
+
+var levels = []string{Level1, Level2, Level3}
 var levelSpeed = map[string]float64{
-	"SLUG":   0.125,
-	"WORM":   0.09,
-	"PYTHON": 0.0625,
+	Level1: 0.125,
+	Level2: 0.09,
+	Level3: 0.0625,
 }
 var levelSkipScore = []struct {
 	string
 	uint32
 }{
-	{"PYTHON", 100},
-	{"WORM", 50},
-	{"SLUG", 0},
+	{Level3, 100},
+	{Level2, 50},
+	{Level1, 0},
 }
 
 type Snake struct {
@@ -61,7 +69,7 @@ type Snake struct {
 	started  bool
 	paused   bool
 	gameOver bool
-	level    string
+	level    Level
 }
 
 type Food struct {
@@ -116,7 +124,7 @@ var snake = Snake{
 	paused:    true,
 	started:   false,
 	gameOver:  false,
-	level:     "SLUG",
+	level:     Level1,
 }
 
 func main() {
@@ -722,7 +730,7 @@ func main() {
 		} else {
 			drawGameTitle(".....SNAKE.....")
 			py := drawCenteredText("PRESS ENTER TO START")
-			drawCenteredTextFromPosition(py, "SLUG", "WORM", "PYTHON")
+			drawCenteredTextFromPosition(py, levels...)
 		}
 
 		rl.EndDrawing()
