@@ -380,7 +380,10 @@ func main() {
 	}
 
 	eatsItself := func(head []int32) bool {
-		for _, piece := range snake.pieces {
+		for i, piece := range snake.pieces {
+			if i == len(snake.pieces)-1 {
+				continue
+			}
 			if piece[0] == head[0] && piece[1] == head[1] {
 				return true
 			}
