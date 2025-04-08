@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"math"
 	"math/rand"
@@ -127,12 +128,15 @@ var snake = Snake{
 	level:     Level1,
 }
 
+//go:embed assets/Minecraft.ttf
+var fontData []byte
+
 func main() {
 	rl.InitWindow(width, height, "retro snake")
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
-	font := rl.LoadFont("assets/Minecraft.ttf")
+	font := rl.LoadFontFromMemory(".ttf", fontData, int32(len(fontData)), 32, nil, 255)
 	defer rl.UnloadFont(font)
 
 	var maxScore uint32 = 0

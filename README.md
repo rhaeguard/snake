@@ -8,6 +8,18 @@ https://github.com/user-attachments/assets/e437530c-a5b4-4204-b25a-6a67be830c45
 
 - for each game, a new map is procedurally generated using [Wave Function Collapse](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/) algorithm.
 
+## build & run
+
+```sh
+# in the project root
+# to build:
+go build -o bin\ -ldflags "-H=windowsgui -s -w" .
+# to run
+go run .
+```
+
+There's a Windows executable file already in the [`bin`](./bin/) folder. 
+
 ## todo
 
 - [x] basic movement mechanics
